@@ -33,27 +33,30 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                // /coletas/me depende do usuário autenticado (Authentication.getName() no controller);
-                // se ficasse coberto pelo permitAll de GET abaixo, authentication chegaria null lá
-                // e a requisição quebraria com 500 em vez de um 401 claro. Por isso vem antes e explícito.
-                .requestMatchers(HttpMethod.GET, "/api/v1/coletas/me").authenticated()
-                // GETs continuam públicos nesta fase (não há requisito pedindo protegê-los ainda)
-                .requestMatchers(HttpMethod.GET, "/api/v1/**").permitAll()
-                // cadastro de usuário, login e autocadastro de empresa parceira são portas de
-                // entrada públicas; a empresa nasce PENDENTE e só vira ponto oficial após
-                // aprovação administrativa (PATCH /empresas/{id}/aprovar, que exige token)
-                .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/v1/empresas").permitAll()
-                // qualquer outra escrita (POST/PUT/PATCH/DELETE) exige token
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // /coletas/me depende do usuário autenticado (Authentication.getName() no controller);
+                        // se ficasse coberto pelo permitAll de GET abaixo, authentication chegaria null lá
+                        // e a requisição quebraria com 500 em vez de um 401 claro. Por isso vem antes e explícito.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/coletas/me").authenticated()
+                        // GET de usuários expõe email/CPF/telefone de todo mundo (lista e por id) -
+                        // não pode ficar coberto pelo permitAll genérico abaixo. Exige token.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/usuarios/**").authenticated()
+                        // GETs continuam públicos nesta fase (não há requisito pedindo protegê-los ainda)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/**").permitAll()
+                        // cadastro de usuário, login e autocadastro de empresa parceira são portas de
+                        // entrada públicas; a empresa nasce PENDENTE e só vira ponto oficial após
+                        // aprovação administrativa (PATCH /empresas/{id}/aprovar, que exige token)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/empresas").permitAll()
+                        // qualquer outra escrita (POST/PUT/PATCH/DELETE) exige token
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

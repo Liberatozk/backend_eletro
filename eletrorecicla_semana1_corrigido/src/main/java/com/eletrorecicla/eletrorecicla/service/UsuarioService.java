@@ -44,6 +44,10 @@ public class UsuarioService {
         if (usuarioRepository.existsByEmail(request.getEmail())) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Já existe um usuário cadastrado com esse email");
         }
+        if (request.getCpf() != null && !request.getCpf().isBlank()
+                && usuarioRepository.existsByCpf(request.getCpf())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Já existe um usuário cadastrado com esse CPF");
+        }
 
         Usuario usuario = new Usuario();
         usuario.setNome(request.getNome());
@@ -79,7 +83,12 @@ public class UsuarioService {
         if (request.getTelefone() != null) {
             usuario.setTelefone(request.getTelefone());
         }
-        if (request.getCpf() != null) {
+        if (request.getCpf() != null && !request.getCpf().isBlank()) {
+            // só valida duplicidade se o CPF estiver realmente mudando
+            if (!request.getCpf().equals(usuario.getCpf())
+                    && usuarioRepository.existsByCpf(request.getCpf())) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Já existe um usuário cadastrado com esse CPF");
+            }
             usuario.setCpf(request.getCpf());
         }
         return usuarioRepository.save(usuario);
