@@ -1,6 +1,7 @@
 package com.eletrorecicla.eletrorecicla.controller;
 
 import com.eletrorecicla.eletrorecicla.dto.UsuarioRequest;
+import com.eletrorecicla.eletrorecicla.dto.UsuarioResponse;
 import com.eletrorecicla.eletrorecicla.model.entity.Usuario;
 import com.eletrorecicla.eletrorecicla.service.UsuarioService;
 import org.springframework.http.HttpStatus;
@@ -20,24 +21,26 @@ public class UsuarioController {
     }
 
     @GetMapping
-    public List<Usuario> findAll() {
-        return usuarioService.findAll();
+    public List<UsuarioResponse> findAll() {
+        return usuarioService.findAll().stream()
+                .map(UsuarioResponse::fromEntity)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public Usuario findById(@PathVariable Integer id) {
-        return usuarioService.findByIdOrThrow(id);
+    public UsuarioResponse findById(@PathVariable Integer id) {
+        return UsuarioResponse.fromEntity(usuarioService.findByIdOrThrow(id));
     }
 
     @PostMapping
-    public ResponseEntity<Usuario> cadastrar(@RequestBody UsuarioRequest request) {
+    public ResponseEntity<UsuarioResponse> cadastrar(@RequestBody UsuarioRequest request) {
         Usuario usuario = usuarioService.cadastrar(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(usuario);
+        return ResponseEntity.status(HttpStatus.CREATED).body(UsuarioResponse.fromEntity(usuario));
     }
 
     @PutMapping("/{id}")
-    public Usuario editar(@PathVariable Integer id, @RequestBody UsuarioRequest request) {
-        return usuarioService.editar(id, request);
+    public UsuarioResponse editar(@PathVariable Integer id, @RequestBody UsuarioRequest request) {
+        return UsuarioResponse.fromEntity(usuarioService.editar(id, request));
     }
 
     @DeleteMapping("/{id}")
