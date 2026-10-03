@@ -31,6 +31,11 @@ public class UsuarioService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
     }
 
+    public Usuario findByEmailOrThrow(String email) {
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+    }
+
     public Usuario cadastrar(UsuarioRequest request) {
         if (request.getNome() == null || request.getNome().isBlank()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Nome é obrigatório");
