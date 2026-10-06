@@ -67,21 +67,35 @@ public class SecurityConfig {
                         new org.springframework.security.web.authentication.HttpStatusEntryPoint(
                                 org.springframework.http.HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
-                        // /coletas/me depende do usuário autenticado (Authentication.getName() no controller);
-                        // se ficasse coberto pelo permitAll de GET abaixo, authentication chegaria null lá
-                        // e a requisição quebraria com 500 em vez de um 401 claro. Por isso vem antes e explícito.
-                        .requestMatchers(HttpMethod.GET, "/api/v1/coletas/me").authenticated()
-                        // GET de usuários expõe email/CPF/telefone de todo mundo (lista e por id) -
-                        // não pode ficar coberto pelo permitAll genérico abaixo. Exige token.
+                        // IMPORTANTE: o Spring usa a PRIMEIRA regra que casar, então as mais
+                        // específicas vêm antes do permitAll genérico de GET no final.
+
+                        // Coletas: dados de histórico/pontuação de pessoas. Tudo exige token
+                        // (/coletas, /coletas/me e /coletas/{id}). Quem pode ver o quê
+                        // (admin vs. dono) é decidido no controller/service.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/coletas").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/coletas/**").authenticated()
+
+                        // Usuários: expõem email/CPF/telefone. Exige token.
                         .requestMatchers(HttpMethod.GET, "/api/v1/usuarios/**").authenticated()
-                        // GETs continuam públicos nesta fase (não há requisito pedindo protegê-los ainda)
+
+                        // Empresas: o mapa usa só as aprovadas (público). A lista completa e a
+                        // consulta por id incluem pendentes/reprovadas e exigem token
+                        // (a lista completa é restrita a ADMIN via @PreAuthorize no controller).
+                        .requestMatchers(HttpMethod.GET, "/api/v1/empresas/aprovadas").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/empresas").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/empresas/{id}").authenticated()
+
+                        // Demais GETs (categorias, produtos) continuam públicos
                         .requestMatchers(HttpMethod.GET, "/api/v1/**").permitAll()
+
                         // cadastro de usuário, login e autocadastro de empresa parceira são portas de
                         // entrada públicas; a empresa nasce PENDENTE e só vira ponto oficial após
                         // aprovação administrativa (PATCH /empresas/{id}/aprovar, que exige token)
                         .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/empresas").permitAll()
+
                         // qualquer outra escrita (POST/PUT/PATCH/DELETE) exige token
                         .anyRequest().authenticated()
                 )

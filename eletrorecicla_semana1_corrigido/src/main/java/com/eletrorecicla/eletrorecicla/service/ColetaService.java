@@ -58,8 +58,17 @@ public class ColetaService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Coleta não encontrada"));
     }
 
-    public ColetaResponse buscarComItens(Integer id) {
+    public ColetaResponse buscarComItens(Integer id, String emailAutenticado, boolean admin) {
         Coleta coleta = findByIdOrThrow(id);
+
+        if (!admin) {
+            Usuario usuario = usuarioRepository.findByEmail(emailAutenticado)
+                    .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Usuário autenticado não encontrado"));
+            if (!coleta.getUsuarioId().equals(usuario.getId())) {
+                throw new ApiException(HttpStatus.FORBIDDEN, "Sem permissão para acessar esta coleta");
+            }
+        }
+
         List<ProdutoColeta> itens = produtoColetaRepository.findById_ColetaId(id);
         return ColetaResponse.from(coleta, itens);
     }

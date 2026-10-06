@@ -20,8 +20,9 @@ public class EmpresaController {
         this.empresaService = empresaService;
     }
 
-    /** Lista completa (inclui pendentes/reprovadas) — uso administrativo. */
+    /** Lista completa (inclui pendentes/reprovadas) — somente ADMIN. */
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public List<Empresa> findAll() {
         return empresaService.findAll();
     }

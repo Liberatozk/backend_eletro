@@ -6,6 +6,7 @@ import com.eletrorecicla.eletrorecicla.model.entity.Coleta;
 import com.eletrorecicla.eletrorecicla.service.ColetaService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,20 +23,25 @@ public class ColetaController {
     }
 
     /** Lista completa — uso administrativo/depuração. Considere restringir por role antes de expor em produção. */
-    @GetMapping
-    public List<Coleta> findAll() {
-        return coletaService.findAll();
-    }
 
-    @GetMapping("/{id}")
-    public ColetaResponse buscarComItens(@PathVariable Integer id) {
-        return coletaService.buscarComItens(id);
-    }
 
     /** Histórico e pontuação do usuário logado — é isto que a tela "impacto" do frontend deve consumir. */
     @GetMapping("/me")
     public List<ColetaResponse> minhasColetas(Authentication authentication) {
         return coletaService.historicoDoUsuarioAutenticado(authentication.getName());
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<Coleta> findAll() {
+        return coletaService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public ColetaResponse buscarComItens(@PathVariable Integer id, Authentication authentication) {
+        boolean admin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        return coletaService.buscarComItens(id, authentication.getName(), admin);
     }
 
     /**
