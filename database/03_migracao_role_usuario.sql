@@ -1,3 +1,5 @@
+-- Somente para bancos criados ANTES da coluna Role em Usuario.
+-- Quem usar 01_criar_tabelas.sql NAO precisa executar este script.
 -- Migração: adiciona a coluna Role à tabela Usuario.
 -- Necessária para o JWT passar a carregar a role e o @PreAuthorize("hasRole('ADMIN')")
 -- em EmpresaController.aprovar/reprovar funcionar de verdade.
