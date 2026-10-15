@@ -67,7 +67,7 @@ public class UsuarioService {
         usuario.setCpf(cpf);
         usuario.setStatus("ATIVO");
         // Autocadastro público nunca define a própria role: todo novo usuário nasce CIDADAO.
-        // Promoção a ADMIN é feita manualmente no banco (ver migracao_role_admin.sql).
+        // Promoção a ADMIN é feita manualmente no banco (ver README, seção "Primeiro ADMIN").
         usuario.setRole("CIDADAO");
         usuario.setDataCadastro(LocalDateTime.now());
         return usuarioRepository.save(usuario);

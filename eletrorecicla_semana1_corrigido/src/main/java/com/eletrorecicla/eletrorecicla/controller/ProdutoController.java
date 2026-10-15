@@ -5,6 +5,7 @@ import com.eletrorecicla.eletrorecicla.model.entity.Produto;
 import com.eletrorecicla.eletrorecicla.service.ProdutoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,17 +30,20 @@ public class ProdutoController {
         return produtoService.findByIdOrThrow(id);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<Produto> cadastrar(@RequestBody ProdutoRequest request) {
         Produto produto = produtoService.cadastrar(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(produto);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public Produto editar(@PathVariable Integer id, @RequestBody ProdutoRequest request) {
         return produtoService.editar(id, request);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> inativar(@PathVariable Integer id) {
         produtoService.inativar(id);
